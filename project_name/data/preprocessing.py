@@ -255,44 +255,55 @@ class Preprocessing:
 
                         np.save(os.path.join(output_cls_dir, f"{base_name}_tensor.npy"), tensor)
 
-    def manually_extracted_features(self, n_mfcc, input_root, output_root):
+    def extract_sequential_manual_features(self, audio_path, sr, n_mfcc, hop_length, frame_length):
         """
-        Extracts a vector of handcrafted statistical features (e.g., ZCR, RMS, spectral properties, MFCCs, chroma).
-        Saves features as normalized .npy files.
+        Extracts per-frame handcrafted features for RNN input.
 
         Args:
-            n_mfcc (int): Number of MFCC coefficients.
-            input_root (str): Path to input dataset.
-            output_root (str): Path to save feature files.
+            audio_path (str): Path to the audio file.
+            sr (int): Sampling rate.
+            n_mfcc (int): Number of MFCCs.
+            hop_length (int): Hop length between frames.
+            frame_length (int): Frame length for STFT.
+
+        Returns:
+            np.ndarray: Array of shape (time_steps, feature_dim)
         """
-        def extract_manual_features(audio_path, sr, n_mfcc):
-            y, sr = librosa.load(audio_path, sr=sr)
+        y, sr = librosa.load(audio_path, sr=sr)
+        if y.ndim > 1:
+            y = librosa.to_mono(y)
 
-            if y.ndim > 1:
-                y = librosa.to_mono(y)
+        zcr = librosa.feature.zero_crossing_rate(y, hop_length=hop_length, frame_length=frame_length)[0]
+        rms = librosa.feature.rms(y=y, hop_length=hop_length, frame_length=frame_length)[0]
+        centroid = librosa.feature.spectral_centroid(y=y, sr=sr, hop_length=hop_length, n_fft=frame_length)[0]
+        bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr, hop_length=hop_length, n_fft=frame_length)[0]
+        rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.95, hop_length=hop_length, n_fft=frame_length)[0]
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc, hop_length=hop_length, n_fft=frame_length)
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr, hop_length=hop_length, n_fft=frame_length)
 
-            zcr = librosa.feature.zero_crossing_rate(y)[0]
-            rms = librosa.feature.rms(y=y)[0]
-            centroid = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
-            bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)[0]
-            rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.95)[0]
-            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
-            chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+        min_len = min(zcr.shape[0], rms.shape[0], centroid.shape[0], bandwidth.shape[0], rolloff.shape[0],
+                    mfcc.shape[1], chroma.shape[1])
 
-            features = np.array([
-                np.mean(zcr), np.std(zcr),
-                np.mean(rms), np.std(rms),
-                np.mean(centroid), np.std(centroid),
-                np.mean(bandwidth), np.std(bandwidth),
-                np.mean(rolloff), np.std(rolloff),
-                *np.mean(mfcc, axis=1),
-                *np.std(mfcc, axis=1),
-                *np.mean(chroma, axis=1)
-            ])
+        features = np.stack([
+            zcr[:min_len],
+            rms[:min_len],
+            centroid[:min_len],
+            bandwidth[:min_len],
+            rolloff[:min_len],
+            *mfcc[:, :min_len],
+            *chroma[:, :min_len]
+        ], axis=1)
 
-            features = librosa.util.normalize(features)
-            return features
+        return librosa.util.normalize(features)
 
+    def sequential_manual_features(self, input_root, output_root, n_mfcc=13, hop_length=512, frame_length=2048, sr=48000):
+        """
+        Processes entire dataset with per-frame manual feature extraction.
+
+        Args:
+            input_root (str): Dataset root path.
+            output_root (str): Output directory for .npy sequences.
+        """
         for split in ["train", "valid", "test"]:
             split_path = os.path.join(input_root, split)
             if not os.path.isdir(split_path):
@@ -309,24 +320,28 @@ class Preprocessing:
                 os.makedirs(output_cls_dir, exist_ok=True)
 
                 for file in os.listdir(cls_path):
-                    if file.lower().endswith("wav"):
+                    if file.lower().endswith(".wav"):
                         file_path = os.path.join(cls_path, file)
                         base_name = os.path.splitext(file)[0]
-                        features = extract_manual_features(file_path, sr=self.sampling_rate, n_mfcc=n_mfcc)
-                        np.save(os.path.join(output_cls_dir, f"{base_name}_manual.npy"), features)
+                        features = self.extract_sequential_manual_features(file_path, sr=sr, n_mfcc=n_mfcc,
+                                                                    hop_length=hop_length, frame_length=frame_length)
+                        np.save(os.path.join(output_cls_dir, f"{base_name}_manual_seq.npy"), features)
+
+
 
     def load_dual_inputs(self, spectrogram_dir, manual_dir, target_frames=300):
         """
-        Loads spectrogram and manual features for each class, pads/crops spectrograms to a fixed number of frames,
+        Loads spectrogram and sequential manual features for each class, 
+        pads/crops spectrograms to a fixed number of frames,
         and assigns numeric labels based on class names.
 
         Args:
             spectrogram_dir (str): Path to spectrograms (organized by class folders).
-            manual_dir (str): Path to manually extracted features (same structure).
+            manual_dir (str): Path to sequential manual features (same structure).
             target_frames (int): Fixed number of time frames for spectrogram tensors.
 
         Returns:
-            Tuple: (X_spec, X_manual, y_spec, y_manual), each as a NumPy array.
+            Tuple: (X_spec, X_manual_seq, y_spec, y_manual_seq), each as a NumPy array.
         """
         label_map = {
             "Airplane": 0,
@@ -344,13 +359,20 @@ class Preprocessing:
         y_spec = []
         y_manual = []
 
-        def pad_or_crop(tensor, target_frames):
+        def pad_or_crop_spec(tensor, target_frames):
             _, height, width = tensor.shape
             if width < target_frames:
                 pad_width = target_frames - width
                 return np.pad(tensor, ((0, 0), (0, 0), (0, pad_width)), mode='constant')
             else:
                 return tensor[:, :, :target_frames]
+
+        def pad_or_crop_seq(tensor, target_frames):
+            if tensor.shape[0] < target_frames:
+                pad_len = target_frames - tensor.shape[0]
+                return np.pad(tensor, ((0, pad_len), (0, 0)), mode='constant')
+            else:
+                return tensor[:target_frames, :]
 
         for cls in os.listdir(spectrogram_dir):
             spec_cls_dir = os.path.join(spectrogram_dir, cls)
@@ -359,46 +381,54 @@ class Preprocessing:
             if not os.path.isdir(spec_cls_dir) or not os.path.isdir(manual_cls_dir):
                 continue
 
-            label = label_map[cls]
+            label = label_map.get(cls)
+            if label is None:
+                continue
 
             for file in os.listdir(spec_cls_dir):
+                if not file.endswith("_tensor.npy"):
+                    continue
                 base_name = file.replace("_tensor.npy", "")
                 spec_path = os.path.join(spec_cls_dir, file)
-                manual_path = os.path.join(manual_cls_dir, f"{base_name}_manual.npy")
+                manual_path = os.path.join(manual_cls_dir, f"{base_name}_manual_seq.npy")
+
+                if not os.path.exists(spec_path) or not os.path.exists(manual_path):
+                    continue
 
                 spec_tensor = np.load(spec_path)
-                spec_tensor = pad_or_crop(spec_tensor, target_frames=target_frames)
+                manual_tensor = np.load(manual_path)
 
-                X_spec.append(spec_tensor)        
-                X_manual.append(np.load(manual_path))     
+                X_spec.append(pad_or_crop_spec(spec_tensor, target_frames))
+                X_manual.append(pad_or_crop_seq(manual_tensor, target_frames))
                 y_spec.append(label)
                 y_manual.append(label)
 
         return np.array(X_spec), np.array(X_manual), np.array(y_spec), np.array(y_manual)
 
-    def apply_pca(self, X_train, X_valid, X_test, n_components=50):
+    def apply_pca(self, X_train, X_valid, X_test, n_components=20):
         """
-        Applies PCA for dimensionality reduction on the dataset.
+        Applies PCA independently on each time step for sequential input [N, T, D].
 
         Args:
-            X_train (np.ndarray): Training feature array.
-            X_valid (np.ndarray): Validation feature array.
-            X_test (np.ndarray): Test feature array.
-            n_components (float or int): Number of components or variance ratio to retain.
+            X_train, X_valid, X_test (np.ndarray): 3D arrays [N, T, D]
+            n_components (int): PCA components per time step
 
         Returns:
-            Tuple: Transformed (X_train_pca, X_valid_pca, X_test_pca)
+            Tuple of PCA-transformed (X_train_pca, X_valid_pca, X_test_pca)
         """
-        X_train_flat = np.vstack(X_train)
-        X_valid_flat = np.vstack(X_valid)
-        X_test_flat = np.vstack(X_test)
+        N_train, T, D = X_train.shape
+        X_train_pca = np.zeros((N_train, T, n_components))
+        X_valid_pca = np.zeros((X_valid.shape[0], T, n_components))
+        X_test_pca = np.zeros((X_test.shape[0], T, n_components))
 
-        pca = PCA(n_components=n_components)
-        X_train_pca = pca.fit_transform(X_train_flat)
-        X_valid_pca = pca.transform(X_valid_flat)
-        X_test_pca = pca.transform(X_test_flat)
+        for t in range(T):
+            pca = PCA(n_components=n_components)
+            X_train_t = X_train[:, t, :]
+            X_train_pca[:, t, :] = pca.fit_transform(X_train_t)
+            X_valid_pca[:, t, :] = pca.transform(X_valid[:, t, :])
+            X_test_pca[:, t, :] = pca.transform(X_test[:, t, :])
 
-        print(f"PCA reduced feature size from {X_train_flat.shape[1]} to {X_train_pca.shape[1]}")
+        print(f"PCA reduced each frame from {D} to {n_components} features")
         return X_train_pca, X_valid_pca, X_test_pca
     
     def plot_spectrogram(self, tensor, title="Mel Spectrogram"):
@@ -444,7 +474,9 @@ class Preprocessing:
         print(f"X_train[0] shape: {np.array(X_train[0]).shape}")
         print(f"X_valid[0] shape: {np.array(X_valid[0]).shape}")
         print(f"X_test[0] shape: {np.array(X_test[0]).shape}")
-        print(f"y_train[0]: {y_train[0]}")
+        print(f"y_train[:1000]: {y_train[:1000]}")
+        print(f"y_train shape: {y_train.shape}")
+        print(f"x_train shape: {X_train.shape}")
 
         print("\nClass label mapping:")
         for cls, idx in label_map.items():
@@ -463,7 +495,7 @@ if __name__ == "__main__":
     #p.resample_audio(root_dir)
     #p.noise_reduction(root_dir)
     #p.spectograms_extraction(128, 128, root_dir, output_root_spectograms)
-    #p.manually_extracted_features(128, root_dir, output_root_manually_extracted_features)
+    #p.sequential_manual_features(root_dir, output_root_manually_extracted_features)
     train_spec = "Applied-ML-Group-7/project_name/data/spectograms/train"
     train_manual = "Applied-ML-Group-7/project_name/data/manually_extracted_features/train"
     X_spec_train, X_manual_train, y_spec_train, y_manual_train = p.load_dual_inputs(train_spec, train_manual)
@@ -479,3 +511,6 @@ if __name__ == "__main__":
     p.print_dataset_summary(X_spec_train, y_spec_train, X_spec_valid, y_spec_valid, X_spec_test, y_spec_test)
     p.print_dataset_summary(X_manual_train, y_manual_train, X_manual_valid, y_manual_valid, X_manual_test, y_manual_test)
     p.plot_spectrogram(X_spec_train[0])
+
+    X_train_pca, X_valid_pca, X_test_pca = p.apply_pca(X_manual_train, X_manual_valid, X_manual_test)
+    print(X_train_pca[0].shape)
