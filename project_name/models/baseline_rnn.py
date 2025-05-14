@@ -6,13 +6,17 @@ from torch.optim import Optimizer
 from typing import Callable, Tuple
 from torch.utils.data import DataLoader, TensorDataset
 import torch
-from data.preprocessing import Preprocessing
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from project_name.data.preprocessing import Preprocessing
+
 class RnnClassifier(NN):
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int = 1, dropout: float = 0.3):
-        super(RnnClassifier, self)._init_()
+        super(RnnClassifier, self).__init__()
         self.rnn = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=True, dropout=dropout if num_layers > 1 else 0)
         self.fc = nn.Linear(hidden_dim, output_dim)
 
@@ -54,7 +58,7 @@ class RnnClassifier(NN):
     def load(self, path: str) -> None:
         self.load_state_dict(torch.load(path))
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     p = Preprocessing(0.7, 0.15, 0.15, 48000)
     train_spec = "Applied-ML-Group-7/project_name/data/spectograms/train"
     train_manual = "Applied-ML-Group-7/project_name/data/manually_extracted_features/train"
