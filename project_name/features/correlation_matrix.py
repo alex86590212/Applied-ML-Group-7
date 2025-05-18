@@ -4,7 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(_file_), '..', '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from project_name.data.preprocessing import Preprocessing
 
 def plot_train_classwise_pca_correlation(X_train_pca, y_train, label_map, n_components=20):
@@ -83,6 +83,29 @@ def extract_top_correlated_features_per_class(X_train_pca, y_train, label_map, n
 
     return result
 
+def save_correlated_features(correlated_features, output_path="Applied-ML-Group-7/project_name/data/manually_extracted_features/most_correlated_features.csv"):
+    """
+    Saves the most correlated feature pairs per class to a CSV file.
+
+    Args:
+        correlated_features (dict): Output from the function extract_top_correlated_features_per_class.
+        output_path (str): Path to the CSV to save the most correlated features.
+    """
+    rows = []
+    for class_name, pairs in correlated_features.items():
+        for feature1, feature2, correlation in pairs:
+            rows.append({
+                "class": class_name,
+                "feature_1": feature1,
+                "feature_2": feature2,
+                "correlation": round(correlation, 4)
+
+            })
+    
+    df = pd.DataFrame(rows)
+    df.to_csv(output_path, index=False)
+    print(f"Correlated features saved to: {output_path}")
+
 if __name__ == "__main__":
 
     label_map = {
@@ -113,4 +136,7 @@ if __name__ == "__main__":
     X_train_pca, X_valid_pca, X_test_pca = p.apply_pca(X_manual_train, X_manual_valid, X_manual_test)
 
     plot_train_classwise_pca_correlation(X_train_pca, y_manual_train, label_map)
-    extract_top_correlated_features_per_class(X_train_pca, y_manual_train, label_map, n_components=20, top_n=5)
+    corrrelated_features = extract_top_correlated_features_per_class(
+        X_train_pca, y_manual_train, label_map, n_components=20, top_n=5
+    )
+    save_correlated_features(corrrelated_features)
