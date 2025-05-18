@@ -64,28 +64,6 @@ class CNN(NN):
          optimizer.step()
          return l.item()
     
-    def evaluate(
-        self,
-        dataloader: torch.utils.data.DataLoader,
-        loss_fn: Callable[[Tensor, Tensor], Tensor]
-    ) -> Tuple[float, float]:
-        self.eval()
-        total_loss = 0.0
-        total_correct = 0
-        total_samples = 0
-
-        with torch.no_grad():
-            for x_batch, y_batch in dataloader:
-                logits = self(x_batch)                         
-                loss = loss_fn(logits, y_batch)               
-                total_loss += loss.item() * x_batch.size(0)   
-                preds = logits.argmax(dim=1)                  
-                total_correct += (preds == y_batch).sum().item()
-                total_samples += x_batch.size(0)
-
-        avg_loss = total_loss / total_samples
-        accuracy = total_correct / total_samples
-        return avg_loss, accuracy
 
     def save(self, path: str) -> None:
         torch.save(self.state_dict(), path)

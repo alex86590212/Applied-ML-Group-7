@@ -35,22 +35,6 @@ class RnnClassifier(NN):
         optimizer.step()
         return l.item()
     
-    def evaluate(self, data: DataLoader, loss: Callable[[Tensor, Tensor], Tensor]) -> Tuple[float, float]:
-        self.eval()
-        total_loss = 0.0
-        total_correct = 0
-        total_samples = 0
-
-        with torch.no_grad():
-            for x_batch, y_batch in data:
-                y_pred = self.forward(x_batch)
-                total_loss += loss(y_pred, y_batch).item() * x_batch.size(0)
-                total_correct += (y_pred.argmax(dim=1) == y_batch).sum().item()
-                total_samples += x_batch.size(0)
-
-        avg_loss = total_loss / total_samples
-        accuracy = total_correct / total_samples
-        return avg_loss, accuracy
     
     def save(self, path: str) -> None:
         torch.save(self.state_dict(), path)
