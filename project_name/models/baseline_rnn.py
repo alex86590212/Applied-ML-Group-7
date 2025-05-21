@@ -34,8 +34,7 @@ class RnnClassifier(NN):
         l.backward()
         optimizer.step()
         return l.item()
-    
-    
+
     def save(self, path: str) -> None:
         torch.save(self.state_dict(), path)
 

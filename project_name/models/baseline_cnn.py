@@ -30,6 +30,7 @@ class CNN(NN):
          for out_ch in conv_channels:
               self.cnn.append(nn.Sequential(
                    nn.Conv2d(current_channel, out_ch, kernel_size, padding=kernel_size//2),
+                   nn.BatchNorm2d(out_ch),
                    nn.ReLU(),
                    nn.MaxPool2d(pool_size))
               )
@@ -63,7 +64,6 @@ class CNN(NN):
          l.backward()
          optimizer.step()
          return l.item()
-    
 
     def save(self, path: str) -> None:
         torch.save(self.state_dict(), path)

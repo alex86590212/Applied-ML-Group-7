@@ -1,0 +1,41 @@
+
+###############################################################################
+Hábrók Cluster
+Job 17378638 for user s5549329
+Finished at: Fri May 16 15:19:06 CEST 2025
+
+Job details:
+============
+
+Job ID                         : 17378638
+Name                           : preprocessing
+User                           : s5549329
+Partition                      : gpushort
+Nodes                          : v100v2gpu17
+Number of Nodes                : 1
+Cores                          : 8
+Number of Tasks                : 1
+State                          : FAILED  
+Submit                         : 2025-05-16T15:18:10
+Start                          : 2025-05-16T15:18:57
+End                            : 2025-05-16T15:19:02
+Reserved walltime              : 02:00:00
+Used walltime                  : 00:00:05
+Used CPU time                  : 00:00:02 (Efficiency:  4.93%)
+% User (Computation)           : 78.81%
+% System (I/O)                 : 21.19%
+Total memory reserved          : 16000M
+Maximum memory used            : 12.00K
+Requested GPUs                 : 1
+Allocated GPUs                 : v100=1
+Max GPU utilization            : 0%
+Max GPU memory used            : 0.00 
+
+Acknowledgements:
+=================
+
+Please see this page for information about acknowledging Hábrók in your publications:
+
+https://wiki.hpc.rug.nl/habrok/introduction/scientific_output
+
+################################################################################

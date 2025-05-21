@@ -6,6 +6,7 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from sklearn.metrics import f1_score
 import torch
+from sklearn.metrics import f1_score
 
 class NN(nn.Module, ABC):
     def __init__(self):
@@ -18,8 +19,6 @@ class NN(nn.Module, ABC):
     @abstractmethod
     def train_step(self, x: Tensor, y: Tensor, optimizer: Optimizer,loss: Callable[[Tensor, Tensor], Tensor]) -> float:
         pass
-
-    from sklearn.metrics import f1_score
 
     def evaluate(self, dataloader, loss_fn):
         self.eval()

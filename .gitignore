@@ -8,3 +8,5 @@ venv/
 data_audio_samples_split/
 manually_extracted_features/
 spectograms/
+*.sh/
+slurm-*.out/
