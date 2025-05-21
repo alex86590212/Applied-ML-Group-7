@@ -23,6 +23,13 @@ class CombinedClassifier(NN):
              num_rnn_layers: int = 1):
 
         super(CombinedClassifier, self).__init__()
+        self.no_channels = no_channels
+        self.no_classes = no_classes
+        self.input_cnn_h = input_cnn_h
+        self.input_cnn_w = input_cnn_w
+        self.input_rnn_dim = input_rnn_dim
+        self.hidden_rnn_dim = hidden_rnn_dim
+        self.num_rnn_layers = num_rnn_layers
 
         self.cnn = nn.ModuleList()
         current_channel = no_channels
@@ -95,6 +102,16 @@ class CombinedClassifier(NN):
 
         f1 = f1_score(all_labels, all_preds, average="macro")
         return total_loss / len(dataloader), f1
+
+    def get_model_args(self):
+        return {
+            "no_channels": self.no_channels,
+            "no_classes": self.no_classes,
+            "input_cnn_h": self.input_cnn_h,
+            "input_cnn_w": self.input_cnn_w,
+            "input_rnn_dim": self.input_rnn_dim,
+            "hidden_rnn_dim": self.hidden_rnn_dim
+        }
 
     def save(self, path: str) -> None:
         torch.save(self.state_dict(), path)

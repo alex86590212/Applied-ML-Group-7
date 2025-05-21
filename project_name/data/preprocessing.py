@@ -405,7 +405,7 @@ class Preprocessing:
 
         return np.array(X_spec), np.array(X_manual), np.array(y_spec), np.array(y_manual)
 
-    def apply_pca(self, X_train, X_valid, X_test, n_components=20):
+    def apply_pca(self, X_train, X_valid, X_test, n_components=15):
         """
         Applies PCA independently on each time step for sequential input [N, T, D].
 
