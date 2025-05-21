@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 import kagglehub
 
-# Download latest version
+#Download latest version
 path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
 dataset_path = path
 
@@ -405,7 +405,7 @@ class Preprocessing:
 
         return np.array(X_spec), np.array(X_manual), np.array(y_spec), np.array(y_manual)
 
-    def apply_pca(self, X_train, X_valid, X_test, n_components=20):
+    def apply_pca(self, X_train, X_valid, X_test, n_components=15):
         """
         Applies PCA independently on each time step for sequential input [N, T, D].
 
@@ -486,16 +486,16 @@ class Preprocessing:
 if __name__ == "__main__":
     p = Preprocessing(0.7, 0.15, 0.15, 48000)
 
-    #p.split_the_data()
+    p.split_the_data()
     p.verify_split()
     root_dir = "Applied-ML-Group-7/project_name/data/data_audio_samples_split"
     output_root_spectograms = "Applied-ML-Group-7/project_name/data/spectograms"
     output_root_manually_extracted_features = "Applied-ML-Group-7/project_name/data/manually_extracted_features"
     #p.find_max_sample_rate_per_class(root_dir)
-    #p.resample_audio(root_dir)
-    #p.noise_reduction(root_dir)
-    #p.spectograms_extraction(128, 128, root_dir, output_root_spectograms)
-    #p.sequential_manual_features(root_dir, output_root_manually_extracted_features)
+    p.resample_audio(root_dir)
+    p.noise_reduction(root_dir)
+    p.spectograms_extraction(128, 128, root_dir, output_root_spectograms)
+    p.sequential_manual_features(root_dir, output_root_manually_extracted_features)
     train_spec = "Applied-ML-Group-7/project_name/data/spectograms/train"
     train_manual = "Applied-ML-Group-7/project_name/data/manually_extracted_features/train"
     X_spec_train, X_manual_train, y_spec_train, y_manual_train = p.load_dual_inputs(train_spec, train_manual)
@@ -512,5 +512,5 @@ if __name__ == "__main__":
     p.print_dataset_summary(X_manual_train, y_manual_train, X_manual_valid, y_manual_valid, X_manual_test, y_manual_test)
     p.plot_spectrogram(X_spec_train[0])
 
-    X_train_pca, X_valid_pca, X_test_pca = p.apply_pca(X_manual_train, X_manual_valid, X_manual_test)
-    print(X_train_pca[0].shape)
+    #X_train_pca, X_valid_pca, X_test_pca = p.apply_pca(X_manual_train, X_manual_valid, X_manual_test)
+    #print(X_train_pca[0].shape)
