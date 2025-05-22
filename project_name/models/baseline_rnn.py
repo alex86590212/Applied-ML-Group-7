@@ -1,4 +1,4 @@
-from model import NN
+from .model import NN
 import torch.nn as nn
 from torch import Tensor
 import numpy as np

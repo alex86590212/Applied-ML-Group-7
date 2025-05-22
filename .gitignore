@@ -10,3 +10,4 @@ manually_extracted_features/
 spectograms/
 *.sh/
 slurm-*.out/
+venv_local/
