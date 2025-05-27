@@ -4,3 +4,11 @@ __pycache__/
 .DS_Store
 venv/
 .env
+
+data_audio_samples_split/
+manually_extracted_features/
+spectograms/
+pca_components/
+*.sh/
+slurm-*.out/
+venv_local/
