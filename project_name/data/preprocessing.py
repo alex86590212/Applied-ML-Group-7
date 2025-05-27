@@ -7,7 +7,7 @@ import soundfile as sf
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-
+from project_name.models.config import Config
 
 import kagglehub
 
@@ -16,6 +16,23 @@ path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
 dataset_path = path
 
 print("Path to dataset files:", path)
+
+config = Config()
+
+def pad_or_crop_spec(tensor, target_frames):
+        _, height, width = tensor.shape
+        if width < target_frames:
+            pad_width = target_frames - width
+            return np.pad(tensor, ((0, 0), (0, 0), (0, pad_width)), mode='constant')
+        else:
+            return tensor[:, :, :target_frames]
+
+def pad_or_crop_seq(tensor, target_frames):
+            if tensor.shape[0] < target_frames:
+                pad_len = target_frames - tensor.shape[0]
+                return np.pad(tensor, ((0, pad_len), (0, 0)), mode='constant')
+            else:
+                return tensor[:target_frames, :]
 
 
 class Preprocessing:
@@ -363,21 +380,6 @@ class Preprocessing:
         y_spec = []
         y_manual = []
 
-        def pad_or_crop_spec(tensor, target_frames):
-            _, height, width = tensor.shape
-            if width < target_frames:
-                pad_width = target_frames - width
-                return np.pad(tensor, ((0, 0), (0, 0), (0, pad_width)), mode='constant')
-            else:
-                return tensor[:, :, :target_frames]
-
-        def pad_or_crop_seq(tensor, target_frames):
-            if tensor.shape[0] < target_frames:
-                pad_len = target_frames - tensor.shape[0]
-                return np.pad(tensor, ((0, pad_len), (0, 0)), mode='constant')
-            else:
-                return tensor[:target_frames, :]
-
         for cls in os.listdir(spectrogram_dir):
             spec_cls_dir = os.path.join(spectrogram_dir, cls)
             manual_cls_dir = os.path.join(manual_dir, cls)
@@ -409,7 +411,7 @@ class Preprocessing:
 
         return np.array(X_spec), np.array(X_manual), np.array(y_spec), np.array(y_manual)
 
-    def apply_pca(self, X_train, X_valid, X_test, n_components=15, save_dir="Applied-ML-Group-7/project_name/data/pca_components"):
+    def apply_pca(self, X_train, X_valid, X_test, n_components=15, save_dir=config.pca_components):
         """
         Applies PCA independently on each time step for sequential input [N, T, D].
 

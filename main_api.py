@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.decomposition import PCA
 
+from project_name.models.config import Config
+
 import os
 import sys
 import uuid
@@ -10,30 +12,16 @@ import numpy as np
 import librosa
 import torch
 
-from project_name.models.baseline_rnn import RnnClassifier
-from project_name.models.baseline_cnn import CNN
-from project_name.models.main_combined_classifier import CombinedClassifier
+from project_name.models.baseline_main_models.baseline_rnn import RnnClassifier
+from project_name.models.baseline_main_models.baseline_cnn import CNN
+from project_name.models.baseline_main_models.main_combined_classifier import CombinedClassifier
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from project_name.data.preprocessing import Preprocessing
+from project_name.data.preprocessing import Preprocessing, pad_or_crop_seq, pad_or_crop_spec
+from project_name.models.train_predict_pipeline import predict
 
 from pydantic import BaseModel, validator, ValidationError
 
 app = FastAPI()
-
-def predict_single(model_class, model_args, save_path, test_loader):
-    model = model_class(**model_args)
-    model.load(save_path)
-    model.eval()
-
-    y_pred = None
-
-    with torch.no_grad():
-        for batch in test_loader:
-            x_batch, y_batch = batch[:-1], batch[-1] if isinstance(batch, (list, tuple)) else batch
-            preds = model(*x_batch).argmax(dim=1) if isinstance(batch, (list, tuple)) else model(x_batch).argmax(dim=1)
-            y_pred = preds.item()
-
-    return y_pred
 
 def pca(new_rnn_tensor, pca_dir):
     T, D = new_rnn_tensor.shape
@@ -50,22 +38,6 @@ def pca(new_rnn_tensor, pca_dir):
     
     return rnn_tensor_pca
 
-
-def pad_or_crop_spec(tensor, target_frames):
-    _, height, width = tensor.shape
-    if width < target_frames:
-        pad_width = target_frames - width
-        return np.pad(tensor, ((0, 0), (0, 0), (0, pad_width)), mode='constant')
-    else:
-        return tensor[:, :, :target_frames]
-    
-def pad_or_crop_seq(tensor, target_frames):
-    if tensor.shape[0] < target_frames:
-        pad_len = target_frames - tensor.shape[0]
-        return np.pad(tensor, ((0, pad_len), (0, 0)), mode='constant')
-    else:
-        return tensor[:target_frames, :]
-
 class ModelTypeChosen(BaseModel):
     model_type: str 
 
@@ -78,8 +50,8 @@ class ModelTypeChosen(BaseModel):
 
 p = Preprocessing(0.7, 0.15, 0.15, 48000)
 
-SAVE_DIR = "Applied-ML-Group-7/project_name/models/user_uploads"
-os.makedirs(SAVE_DIR, exist_ok=True)
+config = Config()
+os.makedirs(config.user_uplods, exist_ok=True)
 
 @app.post("/predict-audio")
 async def predict_audio(model_type: str = Form(...), file: UploadFile = File(...)):
@@ -103,7 +75,7 @@ async def predict_audio(model_type: str = Form(...), file: UploadFile = File(...
 
     try:
         uid = str(uuid.uuid4())
-        save_path = os.path.join(SAVE_DIR, f"{uid}.wav")
+        save_path = os.path.join(config.user_uplods, f"{uid}.wav")
         with open(save_path, "wb") as f:
             f.write(await file.read())
 
@@ -112,8 +84,7 @@ async def predict_audio(model_type: str = Form(...), file: UploadFile = File(...
                     audio_path=save_path, sr=48000, n_mfcc=13, hop_length=512, frame_length=2048
                 )
                 new_rnn_tensor = pad_or_crop_seq(rnn_tensor, target_frames=300)
-                pca_dir = "project_name/data/pca_components"
-                rnn_tensor_pca = pca(new_rnn_tensor, pca_dir)
+                rnn_tensor_pca = pca(new_rnn_tensor, config.pca_components)
                 x_tensor = torch.tensor(rnn_tensor_pca, dtype=torch.float32).unsqueeze(0)
                 y_dummy = torch.tensor([0])
                 test_loader = DataLoader(TensorDataset(x_tensor, y_dummy))
@@ -125,7 +96,7 @@ async def predict_audio(model_type: str = Form(...), file: UploadFile = File(...
                     "output_dim": 8,
                     "num_layers": 2
                 }
-                save_path_model="project_name/models/model_weights/RNN_best_model.pt"
+                save_path_model=config.RNN_best_model_weights
         
         elif model_type == "CNN":
                 cnn_tensor = p.spectograms_extraction(audio_path=save_path, n_mfcc=128, n_mels=128)
@@ -141,7 +112,7 @@ async def predict_audio(model_type: str = Form(...), file: UploadFile = File(...
                     "input_h": new_tensor.shape[1],
                     "input_w": new_tensor.shape[2]
                 }
-                save_path_model="project_name/models/model_weights/CNN_best_model.pt"
+                save_path_model=config.CNN_best_model_weights
 
         elif model_type == "Combined":
                 cnn_tensor = p.spectograms_extraction(audio_path=save_path, n_mfcc=128, n_mels=128)
@@ -168,12 +139,12 @@ async def predict_audio(model_type: str = Form(...), file: UploadFile = File(...
                     "input_rnn_dim": rnn_tensor_pca.shape[1],
                     "hidden_rnn_dim": 128
                 }
-                save_path_model="project_name/models/model_weights/combined_best_model.pt"
+                save_path_model=config.Combined_best_model_weights
         
         else:
             raise HTTPException(status_code=400, detail="Invalid model_type")
 
-        pred = predict_single(model_class, model_args, save_path_model, test_loader)
+        pred = predict(model_class, model_args, save_path_model, test_loader, inference=True)
 
         return JSONResponse(content={
             "prediction_index": pred,
