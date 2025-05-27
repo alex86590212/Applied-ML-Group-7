@@ -1,4 +1,4 @@
-from model import NN
+from .model import NN
 from typing import Sequence, Tuple, Callable
 import torch.nn as nn
 import torch
