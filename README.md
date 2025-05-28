@@ -32,3 +32,17 @@ Make sure you have the following software and tools installed:
 8. Where you see the string text enter one of the following to choose which model you want to use to predict : 'CNN', 'RNN', 'Combined'
    make sure you write them exactly as stated here otherwise it will return an error
 9. Submit a .wav file and see the result ! Mind the fact that we only accept .wav files at the moment and if you sumbit any other file type it will return an error.
+
+# Training Models Locally
+
+After you’ve processed your data, follow these steps to train any of the three models on your machine:
+
+1. **Configure `main.py`**
+
+   Open `main.py` and set the following variables:
+   ```python
+   run_local = True           # enable local execution
+   TRAIN_FROM_SCRATCH = False # only skip preprocessing if already done
+   NUMBER = <model_number>    # 1: RNN, 2: CNN, 3: Combined Model
+   MODE = "train"             # switch to training mode
+
