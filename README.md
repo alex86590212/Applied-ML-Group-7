@@ -40,9 +40,47 @@ After you’ve processed your data, follow these steps to train any of the three
 1. **Configure `main.py`**
 
    Open `main.py` and set the following variables:
+
    ```python
    run_local = True           # enable local execution
    TRAIN_FROM_SCRATCH = False # only skip preprocessing if already done
    NUMBER = <model_number>    # 1: RNN, 2: CNN, 3: Combined Model
-   MODE = "train"             # switch to training mode
+   MODE = "train"           # switch to training mode
+   ```
+
+2. **(Optional) Preprocess from Scratch**
+
+   If you haven’t generated spectrograms and manual features yet, set:
+
+   ```python
+   TRAIN_FROM_SCRATCH = True
+   ```
+
+   Then run the script once to split data, resample audio, reduce noise, extract spectrograms (128×128), and compute manual features.
+
+3. **Run Training**
+
+   Execute:
+
+   ```bash
+   python main.py
+   ```
+
+4. **Model-Specific Details**
+
+   * **RNN**: Trains `RnnClassifier` on PCA-reduced sequential features.
+   * **CNN**: Trains `CNN` using 128×128 spectrogram inputs.
+   * **Combined Model**: Trains `CombinedClassifier`, merging spectrogram and manual feature streams.
+
+5. **Checkpoints & Outputs**
+
+   Trained weights are saved automatically to the paths defined in `config.py`:
+
+   ```python
+   config.RNN_best_model_weights      # e.g., models/rnn_best.pth
+   config.CNN_best_model_weights      # e.g., models/cnn_best.pth
+   config.Combined_best_model_weights # e.g., models/combined_best.pth
+   ```
+
+Adjust any paths in `config.py` before retraining as needed.
 
