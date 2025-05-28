@@ -15,7 +15,7 @@ Make sure you have the following software and tools installed:
    ```
 2. Install the requirements :
    ```bash
-   pip install -r requirments.txt
+   pip install -r requirements.txt
    ```
 3. After cloning the reposity run this command to make sure you are in the right directory :
    ```bash
