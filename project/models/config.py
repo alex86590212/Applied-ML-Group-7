@@ -22,7 +22,9 @@ class Config:
 
         self.pca_components = "project_name/data/pca_components"
 
-        self.drive_url_splits = "https://drive.google.com/drive/folders/1iL8N3afjmHV8tYqPd2DS1ItuFQkRVina?usp=drive_link"
-        self.drive_url_spectograms = "https://drive.google.com/drive/folders/10QKfwTHxTXlT0f4P8HEj8Vq0dyy1hqFk?usp=drive_link"
-        self.drive_url_manual_feats = "https://drive.google.com/drive/folders/1L0do-Yw2vnM1E1h3aq6-j13bXhMK2Oy6?usp=drive_link"
-        self.drive_url_pca = "https://drive.google.com/drive/folders/1CyUc5GQcL1W11h6FjB22fcWzumEk-W9S?usp=drive_link"
+        self.drive_url_splits = "https://drive.google.com/file/d/1i-y2OAkiwXbvK3gz-Hq1c1quWCf2fsrJ/view?usp=sharing"
+        self.drive_url_spectograms = "https://drive.google.com/file/d/11m2-N52yyOsVt2c6O37LvxRtFoEGmnyc/view?usp=sharing"
+        self.drive_url_manual_feats = "https://drive.google.com/file/d/1Zxml-L_ezhXNzRZRszxk7-27GFSrDcp4/view?usp=sharing"
+        self.drive_url_pca = "https://drive.google.com/file/d/1mFayQkcY1TP9qfvOhAM66rz1EOpq9Fc3/view?usp=sharing"
+
+        self.correlation = "Applied-ML-Group-7/project_name/features"

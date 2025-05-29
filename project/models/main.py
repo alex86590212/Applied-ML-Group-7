@@ -1,29 +1,66 @@
 import numpy as np
-from project_name.models.baseline_main_models.baseline_rnn import RnnClassifier
-from project_name.models.baseline_main_models.baseline_cnn import CNN
-from project_name.models.baseline_main_models.main_combined_classifier import CombinedClassifier
+from project.models.baseline_main_models.baseline_rnn import RnnClassifier
+from project.models.baseline_main_models.baseline_cnn import CNN
+from project.models.baseline_main_models.main_combined_classifier import CombinedClassifier
 from torch.utils.data import DataLoader, TensorDataset
-from config import Config
+from project.models.config import Config
 
-import gdown
+import gdown, zipfile
 from pathlib import Path
 
-from train_predict_pipeline import train, predict
+from project.models.train_predict_pipeline import train, predict
 
 import torch
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from project_name.data.preprocessing import Preprocessing
+from project.data.preprocessing import Preprocessing
+
+from project.features.correlation_matrix import plot_train_classwise_pca_correlation
 
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from sklearn.model_selection import KFold
 from sklearn.utils.class_weight import compute_class_weight
 
+def extract_train_valid_test(zip_path: Path, out_dir: Path):
+    """
+    From a zip whose structure is
+        some_root_folder/
+            train/...
+            valid/...
+            test/...
+    extract *only* the train, valid, and test trees into out_dir/, dropping that some_root_folder layer.
+    """
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        all_names = [n for n in zf.namelist() if n.strip()]
+        prefix = Path(all_names[0]).parts[0] + "/"
+
+        for member in zf.infolist():
+            rel = member.filename[len(prefix):]
+            if not (rel.startswith("train/") or
+                    rel.startswith("valid/") or
+                    rel.startswith("test/")):
+                continue
+
+            target = out_dir / rel
+            if member.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with zf.open(member) as src, open(target, "wb") as dst:
+                    dst.write(src.read())
+
 if __name__ == "__main__":
     config = Config()
     p = Preprocessing(0.7, 0.15, 0.15, 48000)
+    label_map = {
+        "Airplane": 0,
+        "Bics": 1,
+        "Cars": 2,
+        "Helicopter": 3,
+        "Motocycles": 4,
+        "Train": 5,
+        "Truck": 6,
+        "bus": 7
+    }
     Model = {1: "RNN", 2: "CNN", 3: "Combined Model"}
     run_local = False
     # If you want to run local on your computer:
@@ -37,7 +74,7 @@ if __name__ == "__main__":
         MODE = "predict"
         TRAIN_FROM_SCRATCH = False
 
-    FOLDERS = {
+    ZIPS = {
     config.data_audio_samples_split:    config.drive_url_splits,
     config.spectograms:                 config.drive_url_spectograms,
     config.manually_extracted_features: config.drive_url_manual_feats,
@@ -54,18 +91,22 @@ if __name__ == "__main__":
         p.spectograms(128, 128, config.data_audio_samples_split, config.spectograms)
         p.sequential_manual_features(config.data_audio_samples_split, config.manually_extracted_features)
     else:
-        # the gdown from the drive
-        for local_path, drive_url in FOLDERS.items():
-            out_dir = Path(local_path)
+        DATA_ROOT = Path(__file__).parent.parent / "data"
+        DATA_ROOT.mkdir(parents=True, exist_ok=True)
+        print("DATA_ROOT is:", DATA_ROOT.resolve())
+
+        for cfg_path, share_url in ZIPS.items():
+            folder_name = Path(cfg_path).name
+            out_dir = DATA_ROOT / folder_name
             out_dir.mkdir(parents=True, exist_ok=True)
 
-            print(f"Download {out_dir} from Drive {drive_url}")
-            gdown.download_folder(
-                url=drive_url,
-                output=str(out_dir),
-                quiet=False,
-                use_cookies=False
-            )
+            zip_path = out_dir / f"{folder_name}.zip"
+            gdown.download(share_url, str(zip_path), quiet=False, fuzzy=True)
+
+            extract_train_valid_test(zip_path, out_dir)
+
+            zip_path.unlink()
+            print(f"`{folder_name}` ready at {out_dir}\n")
 
     X_spec_train, X_manual_train, y_spec_train, y_manual_train = p.load_dual_inputs(config.train_spec, config.train_manual)
 
@@ -77,6 +118,17 @@ if __name__ == "__main__":
     p.print_dataset_summary(X_manual_train, y_manual_train, X_manual_valid, y_manual_valid, X_manual_test, y_manual_test)
 
     X_train_pca, X_valid_pca, X_test_pca = p.apply_pca(X_manual_train, X_manual_valid, X_manual_test)
+    plot_train_classwise_pca_correlation(X_train_pca, y_manual_train, label_map)
+
+    #correlatino matrix of the manually_exrtacted_features after PCA
+    fig = plt.gcf()
+    fig.savefig(
+        os.path.join(self.correlation, "train_classwise_pca_correlation.png"),
+        dpi=300,
+        bbox_inches="tight"
+    )
+    plt.close(fig)
+
     print(X_train_pca[0].shape)
     print(X_valid_pca[0].shape)
     print(X_test_pca[0].shape)
@@ -164,6 +216,11 @@ if __name__ == "__main__":
                 torch.tensor(y_manual_test, dtype=torch.long)
             ), batch_size=64)
             save_path = config.RNN_best_model_weights
+            if not Path(save_path).is_file():
+                raise FileNotFoundError(
+                    f"No RNN weights found at {save_path!r}; please train first "
+                    "or point CONFIG.RNN_best_model_weights to an existing checkpoint."
+                )
             predict(model_class, model_args, save_path, test_loader, "RNN")
 
         elif model_type == "CNN":
@@ -179,6 +236,12 @@ if __name__ == "__main__":
                 torch.tensor(y_spec_test, dtype=torch.long)
             ), batch_size=64)
             save_path = config.CNN_best_model_weights
+
+            if not Path(save_path).is_file():
+                raise FileNotFoundError(
+                    f"No CNN weights found at {save_path!r}; please train first "
+                    "or point CONFIG.CNN_best_model_weights to an existing checkpoint."
+                )
             predict(model_class, model_args, save_path, test_loader, "CNN")
 
         elif model_type == "Combined Model":
@@ -197,4 +260,9 @@ if __name__ == "__main__":
                 torch.tensor(y_spec_test, dtype=torch.long)
             )), batch_size=64)
             save_path = config.Combined_best_model_weights
+            if not Path(save_path).is_file():
+                raise FileNotFoundError(
+                    f"No Combined Model weights found at {save_path!r}; please train first "
+                    "or point CONFIG.Combined_best_model_weights to an existing checkpoint."
+                )
             predict(model_class, model_args, save_path, test_loader, "Combined Model")

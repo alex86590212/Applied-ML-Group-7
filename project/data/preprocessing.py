@@ -7,15 +7,15 @@ import soundfile as sf
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from project_name.models.config import Config
+from project.models.config import Config
 
 import kagglehub
 
 #Download latest version
-path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
-dataset_path = path
+# path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
+# dataset_path = path
 
-print("Path to dataset files:", path)
+# print("Path to dataset files:", path)
 
 config = Config()
 

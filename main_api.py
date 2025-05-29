@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.decomposition import PCA
 
-from project_name.models.config import Config
+from project.models.config import Config
 
 import os
 import sys
@@ -12,12 +12,11 @@ import numpy as np
 import librosa
 import torch
 
-from project_name.models.baseline_main_models.baseline_rnn import RnnClassifier
-from project_name.models.baseline_main_models.baseline_cnn import CNN
-from project_name.models.baseline_main_models.main_combined_classifier import CombinedClassifier
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from project_name.data.preprocessing import Preprocessing, pad_or_crop_seq, pad_or_crop_spec
-from project_name.models.train_predict_pipeline import predict
+from project.models.baseline_main_models.baseline_rnn import RnnClassifier
+from project.models.baseline_main_models.baseline_cnn import CNN
+from project.models.baseline_main_models.main_combined_classifier import CombinedClassifier
+from project.data.preprocessing import Preprocessing, pad_or_crop_seq, pad_or_crop_spec
+from project.models.train_predict_pipeline import predict
 
 from pydantic import BaseModel, validator, ValidationError
 

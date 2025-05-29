@@ -2,10 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(_file_), '..', '..')))
-from project_name.data.preprocessing import Preprocessing
+from project.data.preprocessing import Preprocessing
 
 def plot_train_classwise_pca_correlation(X_train_pca, y_train, label_map, n_components=20):
     """

@@ -34,7 +34,7 @@ def predict(model_class, model_args, save_path, test_loader, name: str = None, i
                 y_true.extend(y_batch.cpu().numpy())
                 y_pred.extend(preds.cpu().numpy())
 
-        print("\n=== Test Set Classification Report ===")
+        print("\nTest Set Classification Report")
         print(classification_report(y_true, y_pred))
 
         cm = confusion_matrix(y_true, y_pred)

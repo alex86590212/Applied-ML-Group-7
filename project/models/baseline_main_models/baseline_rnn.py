@@ -9,11 +9,6 @@ import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from project_name.data.preprocessing import Preprocessing
-
 class RnnClassifier(NN):
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int, num_layers: int = 1, dropout: float = 0.3):
         super(RnnClassifier, self).__init__()
