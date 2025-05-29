@@ -75,7 +75,7 @@ if __name__ == "__main__":
         NUMBER = 3
         MODE = "train"
         #if you already downloaded the dataset, set this to None
-        TRAIN_FROM_SCRATCH = None
+        TRAIN_FROM_SCRATCH = True
 
     ZIPS = {
     config.data_audio_samples_split:    config.drive_url_splits,

@@ -12,10 +12,10 @@ from project.models.config import Config
 import kagglehub
 
 #Download latest version
-# path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
-# dataset_path = path
+path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
+dataset_path = path
 
-# print("Path to dataset files:", path)
+print("Path to dataset files:", path)
 
 config = Config()
 
@@ -57,7 +57,7 @@ class Preprocessing:
         Copies files from the source directory into corresponding subdirectories.
         """
         source_dir = dataset_path
-        target_dir = "Applied-ML-Group-7/project_name/data/data_audio_samples_split"
+        target_dir = config.data_audio_samples_split
         split_ratio = {"train": self.train_ratio, "valid": self.valid_ratio, "test": self.test_ratio}
 
         if os.path.exists(target_dir):
@@ -98,7 +98,7 @@ class Preprocessing:
         Helps ensure the dataset has been divided according to the intended ratios.
         """
         source_dir = dataset_path
-        target_dir = "Applied-ML-Group-7/project_name/data/data_audio_samples_split"
+        target_dir = config.data_audio_samples_split
         expected_splits = {"train": self.train_ratio, "valid": self.valid_ratio, "test": self.test_ratio}
 
         class_names = [cls for cls in os.listdir(source_dir) if os.path.isdir(os.path.join(source_dir, cls))]
@@ -492,36 +492,3 @@ class Preprocessing:
         print("\nClass label mapping:")
         for cls, idx in label_map.items():
             print(f"  {cls}: {idx}")    
-
-
-if __name__ == "__main__":
-    p = Preprocessing(0.7, 0.15, 0.15, 48000)
-
-    #p.split_the_data()
-    #p.verify_split()
-    root_dir = "Applied-ML-Group-7/project_name/data/data_audio_samples_split"
-    output_root_spectograms = "Applied-ML-Group-7/project_name/data/spectograms"
-    output_root_manually_extracted_features = "Applied-ML-Group-7/project_name/data/manually_extracted_features"
-    #p.find_max_sample_rate_per_class(root_dir)
-    #p.resample_audio(root_dir)
-    #p.noise_reduction(root_dir)
-    #p.spectograms(128, 128, root_dir, output_root_spectograms)
-    #p.sequential_manual_features(root_dir, output_root_manually_extracted_features)
-    train_spec = "Applied-ML-Group-7/project_name/data/spectograms/train"
-    train_manual = "Applied-ML-Group-7/project_name/data/manually_extracted_features/train"
-    X_spec_train, X_manual_train, y_spec_train, y_manual_train = p.load_dual_inputs(train_spec, train_manual)
-
-    valid_spec = "Applied-ML-Group-7/project_name/data/spectograms/valid"
-    valid_manual = "Applied-ML-Group-7/project_name/data/manually_extracted_features/valid"
-    X_spec_valid, X_manual_valid, y_spec_valid, y_manual_valid = p.load_dual_inputs(valid_spec, valid_manual)
-
-    test_spec = "Applied-ML-Group-7/project_name/data/spectograms/test"
-    test_manual = "Applied-ML-Group-7/project_name/data/manually_extracted_features/test"
-    X_spec_test, X_manual_test, y_spec_test, y_manual_test = p.load_dual_inputs(test_spec, test_manual) 
-
-    p.print_dataset_summary(X_spec_train, y_spec_train, X_spec_valid, y_spec_valid, X_spec_test, y_spec_test)
-    p.print_dataset_summary(X_manual_train, y_manual_train, X_manual_valid, y_manual_valid, X_manual_test, y_manual_test)
-    #p.plot_spectrogram(X_spec_train[0])
-
-    X_train_pca, X_valid_pca, X_test_pca = p.apply_pca(X_manual_train, X_manual_valid, X_manual_test)
-    #print(X_train_pca[0].shape)

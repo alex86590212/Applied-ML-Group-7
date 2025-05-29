@@ -121,8 +121,7 @@ async def predict_audio(model_type: str = Form(...), file: UploadFile = File(...
                     audio_path=save_path, sr=48000, n_mfcc=13, hop_length=512, frame_length=2048
                 )
                 new_rnn_tensor = pad_or_crop_seq(rnn_tensor, target_frames=300)
-                pca_dir = "project_name/data/pca_components"
-                rnn_tensor_pca = pca(new_rnn_tensor, pca_dir)
+                rnn_tensor_pca = pca(new_rnn_tensor, config.pca_components)
 
                 cnn_tensor_t = torch.tensor(new_cnn_tensor, dtype=torch.float32).unsqueeze(0)
                 rnn_tensor_t = torch.tensor(rnn_tensor_pca, dtype=torch.float32).unsqueeze(0)
