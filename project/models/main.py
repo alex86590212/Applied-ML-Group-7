@@ -67,10 +67,10 @@ if __name__ == "__main__":
     #To choose the model that you want to train/predict, input number 1: RNN, 2: CNN, 3: Combined Model
     NUMBER = 3
     #To choose the mode to train/predict, input: predict, train
-    MODE = "train"
+    MODE = "predict"
     #if you already downloaded the dataset, set this to None
     #To chose if you want to train from scratch input: True, else input: False
-    TRAIN_FROM_SCRATCH = True
+    TRAIN_FROM_SCRATCH = False
 
     ZIPS = {
     config.data_audio_samples_split:    config.drive_url_splits,
