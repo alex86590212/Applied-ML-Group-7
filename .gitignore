@@ -5,10 +5,14 @@ __pycache__/
 venv/
 .env
 
-data_audio_samples_split/
-manually_extracted_features/
-spectograms/
-pca_components/
+# ignore everything under those data folders
+project/data/data_audio_samples_split/*
+project/data/manually_extracted_features/*
+project/data/spectograms/*
+
+!project/data/data_audio_samples_split/.gitkeep
+!project/data/manually_extracted_features/.gitkeep
+!project/data/spectograms/.gitkeep
 *.sh/
 slurm-*.out/
 venv_local/

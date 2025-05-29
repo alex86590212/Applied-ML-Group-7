@@ -1,6 +1,0 @@
-/var/spool/slurmd/job17378638/slurm_script: line 16: source: /home2/s5549329/Applied-ML-Group-7/venv: is a directory
-Traceback (most recent call last):
-  File "/home2/s5549329/Applied-ML-Group-7/project_name/data/preprocessing.py", line 5, in <module>
-    import librosa
-ModuleNotFoundError: No module named 'librosa'
-/var/spool/slurmd/job17378638/slurm_script: line 22: deactivate: command not found
