@@ -64,18 +64,13 @@ if __name__ == "__main__":
         "bus": 7
     }
     Model = {1: "RNN", 2: "CNN", 3: "Combined Model"}
-    run_local = False
-    # If you want to run local on your computer:
-    if run_local:
-        NUMBER = int(input("To choose the model that you want to train/predict, input number 1: RNN, 2: CNN, 3: Combined Model"))
-        MODE = str(input("To choose the mode to train/predict, input: predict, train"))
-        TRAIN_FROM_SCRATCH = bool(input("To chose if you want to train from scratch input: True, else input: False"))
-    # If you want ro run it on habrok or other computer
-    else:
-        NUMBER = 3
-        MODE = "train"
-        #if you already downloaded the dataset, set this to None
-        TRAIN_FROM_SCRATCH = True
+    #To choose the model that you want to train/predict, input number 1: RNN, 2: CNN, 3: Combined Model
+    NUMBER = 3
+    #To choose the mode to train/predict, input: predict, train
+    MODE = "train"
+    #if you already downloaded the dataset, set this to None
+    #To chose if you want to train from scratch input: True, else input: False
+    TRAIN_FROM_SCRATCH = True
 
     ZIPS = {
     config.data_audio_samples_split:    config.drive_url_splits,
