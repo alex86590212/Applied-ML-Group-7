@@ -8,10 +8,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.nn import CrossEntropyLoss
 import numpy as np
 
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from project_name.data.preprocessing import Preprocessing
 
 class CNN(NN):
      def __init__(self, no_channels :int = 3,

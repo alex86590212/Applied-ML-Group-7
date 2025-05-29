@@ -5,6 +5,9 @@ from project_name.models.baseline_main_models.main_combined_classifier import Co
 from torch.utils.data import DataLoader, TensorDataset
 from config import Config
 
+import gdown
+from pathlib import Path
+
 from train_predict_pipeline import train, predict
 
 import torch
@@ -17,9 +20,6 @@ from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from sklearn.model_selection import KFold
 from sklearn.utils.class_weight import compute_class_weight
-
-def model_load():
-    pass
 
 if __name__ == "__main__":
     config = Config()
@@ -37,6 +37,12 @@ if __name__ == "__main__":
         MODE = "predict"
         TRAIN_FROM_SCRATCH = False
 
+    FOLDERS = {
+    config.data_audio_samples_split:    config.drive_url_splits,
+    config.spectograms:                 config.drive_url_spectograms,
+    config.manually_extracted_features: config.drive_url_manual_feats,
+    config.pca_components:              config.drive_url_pca,
+    }
 
     if TRAIN_FROM_SCRATCH == True:
 
@@ -49,7 +55,17 @@ if __name__ == "__main__":
         p.sequential_manual_features(config.data_audio_samples_split, config.manually_extracted_features)
     else:
         # the gdown from the drive
-        pass
+        for local_path, drive_url in FOLDERS.items():
+            out_dir = Path(local_path)
+            out_dir.mkdir(parents=True, exist_ok=True)
+
+            print(f"Download {out_dir} from Drive {drive_url}")
+            gdown.download_folder(
+                url=drive_url,
+                output=str(out_dir),
+                quiet=False,
+                use_cookies=False
+            )
 
     X_spec_train, X_manual_train, y_spec_train, y_manual_train = p.load_dual_inputs(config.train_spec, config.train_manual)
 
