@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from project.data.preprocessing import Preprocessing
+import os
 
 def plot_train_classwise_pca_correlation(X_train_pca, y_train, label_map, n_components=20):
     """

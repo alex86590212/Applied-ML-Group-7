@@ -5,6 +5,7 @@ from project.models.baseline_main_models.main_combined_classifier import Combine
 from torch.utils.data import DataLoader, TensorDataset
 from project.models.config import Config
 
+import os
 import gdown, zipfile
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from project.data.preprocessing import Preprocessing
 
 from project.features.correlation_matrix import plot_train_classwise_pca_correlation
 
+import matplotlib.pyplot as plt
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from sklearn.model_selection import KFold
@@ -72,7 +74,8 @@ if __name__ == "__main__":
     else:
         NUMBER = 2
         MODE = "predict"
-        TRAIN_FROM_SCRATCH = False
+        #if you already downloaded the dataset, set this to None
+        TRAIN_FROM_SCRATCH = None
 
     ZIPS = {
     config.data_audio_samples_split:    config.drive_url_splits,
@@ -90,7 +93,8 @@ if __name__ == "__main__":
         p.noise_reduction(config.data_audio_samples_split)
         p.spectograms(128, 128, config.data_audio_samples_split, config.spectograms)
         p.sequential_manual_features(config.data_audio_samples_split, config.manually_extracted_features)
-    else:
+
+    elif TRAIN_FROM_SCRATCH == False:
         DATA_ROOT = Path(__file__).parent.parent / "data"
         DATA_ROOT.mkdir(parents=True, exist_ok=True)
         print("DATA_ROOT is:", DATA_ROOT.resolve())
@@ -123,7 +127,7 @@ if __name__ == "__main__":
     #correlatino matrix of the manually_exrtacted_features after PCA
     fig = plt.gcf()
     fig.savefig(
-        os.path.join(self.correlation, "train_classwise_pca_correlation.png"),
+        os.path.join(config.correlation, "train_classwise_pca_correlation.png"),
         dpi=300,
         bbox_inches="tight"
     )
