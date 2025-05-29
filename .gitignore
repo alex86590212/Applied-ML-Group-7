@@ -8,12 +8,10 @@ venv/
 # ignore everything under those data folders
 project/data/data_audio_samples_split/*
 project/data/manually_extracted_features/*
-project/data/pca_components/*
 project/data/spectograms/*
 
 !project/data/data_audio_samples_split/.gitkeep
 !project/data/manually_extracted_features/.gitkeep
-!project/data/pca_components/.gitkeep
 !project/data/spectograms/.gitkeep
 *.sh/
 slurm-*.out/

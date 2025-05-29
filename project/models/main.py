@@ -72,8 +72,8 @@ if __name__ == "__main__":
         TRAIN_FROM_SCRATCH = bool(input("To chose if you want to train from scratch input: True, else input: False"))
     # If you want ro run it on habrok or other computer
     else:
-        NUMBER = 2
-        MODE = "predict"
+        NUMBER = 3
+        MODE = "train"
         #if you already downloaded the dataset, set this to None
         TRAIN_FROM_SCRATCH = None
 
