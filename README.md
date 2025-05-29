@@ -63,7 +63,7 @@ After you’ve processed your data, follow these steps to train any of the three
    Execute:
 
    ```bash
-   python main.py
+   python -m project.models.main.py
    ```
 
 4. **Model-Specific Details**
