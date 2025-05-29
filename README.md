@@ -42,7 +42,6 @@ After you’ve processed your data, follow these steps to train any of the three
    Open `main.py` and set the following variables:
 
    ```python
-   run_local = True           # enable local execution
    TRAIN_FROM_SCRATCH = False # only skip preprocessing if already done
    NUMBER = <model_number>    # 1: RNN, 2: CNN, 3: Combined Model
    MODE = "train"           # switch to training mode
@@ -63,7 +62,7 @@ After you’ve processed your data, follow these steps to train any of the three
    Execute:
 
    ```bash
-   python -m project.models.main.py
+   python -m project.models.main
    ```
 
 4. **Model-Specific Details**
