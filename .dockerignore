@@ -1,0 +1,31 @@
+# .dockerignore
+
+# Exclude all of project/data
+project/data/*
+data/*
+
+# But explicitly allow pca_components subfolder
+!project/data/pca_components/
+!project/data/pca_components/**
+!project/data/preprocessing.py
+
+
+# Python cache and venvs
+__pycache__/
+*.py[cod]
+*.so
+env/
+venv/
+
+# Git
+.git
+.gitignore
+
+
+
+# IDE/editor artifacts
+*.log
+*.sqlite3
+.DS_Store
+.vscode/
+.idea/

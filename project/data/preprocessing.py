@@ -12,10 +12,10 @@ from project.models.config import Config
 import kagglehub
 
 #Download latest version
-path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
-dataset_path = path
+#path = kagglehub.dataset_download("janboubiabderrahim/vehicle-sounds-dataset")
+#dataset_path = path
 
-print("Path to dataset files:", path)
+#print("Path to dataset files:", path)
 
 config = Config()
 
@@ -56,7 +56,7 @@ class Preprocessing:
         Splits the audio dataset into training, validation, and test sets based on specified ratios.
         Copies files from the source directory into corresponding subdirectories.
         """
-        source_dir = dataset_path
+        source_dir = None
         target_dir = config.data_audio_samples_split
         split_ratio = {"train": self.train_ratio, "valid": self.valid_ratio, "test": self.test_ratio}
 
@@ -97,7 +97,7 @@ class Preprocessing:
         Verifies the data split by printing the number of files in each split for each class.
         Helps ensure the dataset has been divided according to the intended ratios.
         """
-        source_dir = dataset_path
+        source_dir = None
         target_dir = config.data_audio_samples_split
         expected_splits = {"train": self.train_ratio, "valid": self.valid_ratio, "test": self.test_ratio}
 
